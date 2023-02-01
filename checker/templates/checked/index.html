@@ -1,0 +1,13 @@
+{% extends "checked/product_base.html" %}
+
+{% block content_wrapper %}
+    <a href="{% url 'checker:categories' %}">Додати продукт</a>
+    <a href="{% url 'checker:products_list' %}">Список продуктів</a>
+    <div>
+        <form action="{% url 'checker:logout_user' %}" method="post">{% csrf_token %}
+            <button>logout</button>
+        </form>
+    </div>
+{% endblock %}
+{% block script %}
+{% endblock %}

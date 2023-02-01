@@ -1,0 +1,52 @@
+{% extends "checked/base.html" %}
+
+{% block content %}
+    <div class="wrapper">
+         <div class="header">
+            <div class="header__content">
+                <div class="header__logo">
+                    {% load static %}
+                    <a href="{% url 'checker:products_list' %}">
+                        <img src="{% static "checker/images/logo.svg" %}" alt="" class="header__logo-img">
+                    </a>
+
+                </div>
+                <div class="header__menu">
+                    <ul class="menu">
+                        <li class="menu-item-1">
+                            <div class="menu-item-container">
+
+                                <a href="{% url 'checker:categories' %}"><img src="{% static 'checker/icons/icon-add.svg' %}" alt="" class="menu-img">Добавити продукцію</a>
+                            </div>
+                        </li>
+                        <li class="menu-item-2">
+                            <div class="menu-item-container">
+
+                                <a href="{% url 'checker:products_list' %}"><img src="{% static 'checker/icons/icon-menu.svg' %}" alt="" class="menu-img">Список продукції</a>
+                            </div>
+                        </li>
+                        <li class="menu-item-3">
+                            <div class="menu-item-container">
+
+                                <a href="{% url 'checker:logout_user' %}"><img src="{% static 'checker/icons/icon-exit.svg' %}" alt="" class="menu-img">Вихід</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="header__user-info">
+                    {% if user.is_authenticated %}
+                        <p class="header__user-info-name">{{ user.employee }}</p>
+                        <p class="header__user-info-position">{% if user.employee.manager %}менеджер{% elif user.employee.designer %}дизайнер{% else %}інший працівник{% endif %}</p>
+                    {% else %}
+                        <p class="header__user-info-name">Stranger</p>
+                        <p class="header__user-info-position">get out</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% block content_wrapper %}
+        {% endblock %}
+    </div>
+    {% block script %}
+    {% endblock %}
+{% endblock %}

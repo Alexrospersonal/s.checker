@@ -1,0 +1,184 @@
+{% extends "checked/product_base.html" %}
+
+
+
+{% block content_wrapper %}
+    <div class="add-file__wrapper">
+        <div class="content__image-container container">
+            <div class="content__container">
+                    <h2>Завантажити файли</h2>
+                </div>
+            <div class="content__container">
+                <button class="submit-button" onclick="addOnePageProduct()">Односторнній</button>
+                <button class="submit-button" onclick="addTwoPageProduct()">Двосторонній</button>
+                <button class="submit-button" onclick="addMultiPageProduct()">Багатосторінковий</button>
+            </div>
+            <div class="load-image">
+                <div class="content__container">
+                    <label for="front-img" class="item__title">Лице</label>
+                    <div class="image-container" id="front-img"></div>
+                </div>
+                <div class="content__container">
+                    <label for="back-img" class="item__title">Зворот</label>
+                    <div class="image-container" id="back-img"></div>
+                </div>
+{#                <div class="content__container">#}
+{#                        <fieldset form="product-form">#}
+{#                            <div>#}
+{#                                <label for="front-file" class="item__title">Лице</label>#}
+{#                                <label class="input-file">#}
+{#                                    {{ form.front_image }}#}
+{#                                    {{ form.front_image.errors }}#}
+{#                                    <span class="input-file-btn">Виберіть файл</span>#}
+{#                                    <span class="input-file-text">Максимум 100мб</span>#}
+{#                                </label>#}
+{#                            </div>#}
+{#                            <div>#}
+{#                                <label for="back-file" class="item__title">Зворот</label>#}
+{#                                <label class="input-file">#}
+{##}
+{#                                    {{ form.back_image }}#}
+{#                                    {{ form.back_image.errors }}#}
+{#                                    <span class="input-file-btn">Виберіть файл</span>#}
+{#                                    <span class="input-file-text">Максимум 100мб</span>#}
+{#                                </label>#}
+{#                            </div>#}
+{#                        </fieldset>#}
+{#                    </div>#}
+            </div>
+        </div>
+        <div class="content__information-container container">
+            <div class="content__container">
+                <h2>{{ item_name }}</h2>
+                <p>{{ item_category }}</p>
+                <form enctype="multipart/form-data" action="" method="POST" id="product-form">
+                    {% csrf_token %}
+                    {{ form.non_field_errors }}
+                    <div class="form__item">
+                        <label for="name" class="item__title">Назва</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="form__item">
+                        <label for="name" class="item__title">Тип:</label>
+                        <fieldset>
+                            {% for radio in form.item %}
+                            <div class="fieldset__item">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}">
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </fieldset>
+                    </div>
+                    <div class="form__item">
+                        <label for="name" class="item__title">Розміри:</label>
+                        <fieldset>
+                            {% for radio in form.size %}
+                            <div class="fieldset__item">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}">
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </fieldset>
+                    </div>
+                    <div class="form__item">
+                        <label for="name" class="item__title">Матеріал:</label>
+                        <fieldset>
+                            {% for radio in form.paper %}
+                            <div class="fieldset__item">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}">
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </fieldset>
+                    </div>
+                    <div class="form__item">
+                        <label for="name" class="item__title">Покриття:</label>
+                        <fieldset>
+                            {% for radio in form.cover %}
+                            <div class="fieldset__item">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}">
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </fieldset>
+                    </div>
+                    <div class="form__item">
+                        <label for="name" class="item__title">Менеджер:</label>
+                        <fieldset>
+                            {% for radio in form.manager %}
+                            <div class="fieldset__item">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}">
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </fieldset>
+                    </div>
+                    <div class="form__item">
+                        <label for="name" class="item__title">Дизайнер:</label>
+                        <fieldset>
+                            {% for radio in form.designer %}
+                            <div class="fieldset__item">
+                                {{ radio.tag }}
+                                <label for="{{ radio.id_for_label }}">
+                                    <span>{{ radio.choice_label }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </fieldset>
+                    </div>
+                    <div class="form__item">
+                        <label for="name" class="item__title">Опис:</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="form__item">
+                        <div>
+                                <label for="front-file" class="item__title">Лице</label>
+                                <label class="input-file">
+                                    {{ form.front_image }}
+                                    {{ form.front_image.errors }}
+                                    <span class="input-file-btn">Виберіть файл</span>
+                                    <span class="input-file-text">Максимум 100мб</span>
+                                </label>
+                            </div>
+                            <div>
+                                <label for="back-file" class="item__title">Зворот</label>
+                                <label class="input-file">
+                                    {{ form.back_image }}
+                                    {{ form.back_image.errors }}
+                                    <span class="input-file-btn">Виберіть файл</span>
+                                    <span class="input-file-text">Максимум 100мб</span>
+                                </label>
+                            </div>
+                    </div>
+                    <div class="form__item">
+                        <label for="number" class="item__title">Кількість</label>
+                        {{ form.quantity }}
+                        <input type="submit" value="Відправити" class="submit-button" >
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{#    <form action="" enctype="multipart/form-data" action="" method="POST">#}
+{#        {% csrf_token %}#}
+{#        {{ form.as_div }}#}
+{#        <input type="submit" value="Submit">#}
+{#    </form>#}
+
+{% endblock %}
+{% block script %}
+    {% load static %}
+    <script src="{% static 'checker/js/jquery-3.6.3.min.js' %}"></script>
+    <script src="{% static 'checker/js/add_product.js' %}"></script>
+    <script src="{% static 'checker/js/productFormImage.js' %}"></script>
+{% endblock %}

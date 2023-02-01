@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Items</title>
+
+</head>
+<body>
+    {% for item in object_list %}
+        <p><a href="{% url 'checker:test_new_form' item.pk %}">{{ item.name }}</a></p>
+    {% endfor %}
+</body>
+</html>

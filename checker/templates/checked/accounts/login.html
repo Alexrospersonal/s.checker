@@ -1,0 +1,40 @@
+{% extends "checked/base.html" %}
+
+{% block content %}
+    <div class="main-container">
+        <div class="login container">
+            <div class="login__logo">
+                {% load static %}
+                <img src="{% static 'checker/images/logo.svg' %}" alt="">
+            </div>
+            <div class="loggin__line"></div>
+            <div class="login__form">
+                <form action="" method="post">
+                    {% csrf_token %}
+                    <div class="login__errors">
+                        {{ form.non_field_errors }}
+                    </div>
+                    <div class="login__login">
+                        {{ form.username.errors }}
+                        <label for="login">Логін</label>
+                        {{ form.username }}
+                    </div>
+                    <div class="login__password">
+                        {{ form.password.errors }}
+                        <label for="password">Пароль</label>
+                        {{ form.password }}
+                    </div>
+                    <div class="login__confirm">
+                        <input type="submit" value="Підтвердити" class="submit-button">
+                        <input type="hidden" name="next" value="{{ next }}">
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="ocean">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+{% endblock %}

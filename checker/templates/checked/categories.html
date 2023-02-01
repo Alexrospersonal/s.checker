@@ -1,0 +1,14 @@
+{% extends "checked/product_base.html" %}
+
+{% block content_wrapper %}
+    <div class="categories__wrapper">
+        {% for category in categoies %}
+            <div class="categories__item container">
+                <div class="categories__item-image"></div>
+                <a href="{% url 'checker:items' category.pk %}">{{ category.name }}</a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+{% block script %}
+{% endblock %}
