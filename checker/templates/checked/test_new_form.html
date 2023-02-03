@@ -142,23 +142,24 @@
                     </div>
                     <div class="form__item">
                         <div>
-                                <label for="front-file" class="item__title">Лице</label>
-                                <label class="input-file">
-                                    {{ form.front_image }}
-                                    {{ form.front_image.errors }}
-                                    <span class="input-file-btn">Виберіть файл</span>
-                                    <span class="input-file-text">Максимум 100мб</span>
-                                </label>
-                            </div>
-                            <div>
-                                <label for="back-file" class="item__title">Зворот</label>
-                                <label class="input-file">
-                                    {{ form.back_image }}
-                                    {{ form.back_image.errors }}
-                                    <span class="input-file-btn">Виберіть файл</span>
-                                    <span class="input-file-text">Максимум 100мб</span>
-                                </label>
-                            </div>
+                            <label for="front-file" class="item__title">Файл</label>
+                            <label class="input-file">
+{#                                {{ image_form.image }}#}
+{#                                {{ image_form.image.errors }}#}
+                                <input type="file" name="images" accept=".jpeg, .jpg, .tif, .pdf" id="front-image-button" multiple="" required="">
+                                <span class="input-file-btn">Виберіть файли</span>
+                                <span class="input-file-text">Максимум 100мб</span>
+                            </label>
+                        </div>
+{#                            <div>#}
+{#                                <label for="back-file" class="item__title">Зворот</label>#}
+{#                                <label class="input-file">#}
+{#                                    {{ form.back_image }}#}
+{#                                    {{ form.back_image.errors }}#}
+{#                                    <span class="input-file-btn">Виберіть файл</span>#}
+{#                                    <span class="input-file-text">Максимум 100мб</span>#}
+{#                                </label>#}
+{#                            </div>#}
                     </div>
                     <div class="form__item">
                         <label for="number" class="item__title">Кількість</label>

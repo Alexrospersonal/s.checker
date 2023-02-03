@@ -196,6 +196,126 @@ class FileForm(forms.Form):
 #         return round(image.width * 25.4 / 300), round(image.height * 25.4 / 300)
 
 
+# class TestImageForm(forms.ModelForm):
+#     image = forms.ImageField(label='Зображення', widget=forms.ClearableFileInput(
+#         attrs={
+#             # "multiple": True,
+#         }
+#     ))
+    #
+    # images = forms.FileField(
+    #     label='Лице',
+    #     widget=forms.ClearableFileInput(
+    #         attrs={
+    #             "name": "file",
+    #             "accept": ".jpeg, .jpg, .tif, .pdf",
+    #             "id": "front-image-button",
+    #             "multiple": True,
+    #         },
+    #     ),
+    # )
+
+    # def clean(self):
+    #     pass
+    #
+    # def clean_image(self):
+    #     pass
+    #
+    # class Meta:
+    #     model = ProductImage
+    #     fields = [
+    #         'image',
+    #     ]
+
+
+class ProductImageForm(forms.ModelForm):
+    # def __init__(self, *args, **kwargs):
+    #     # self.item_pk = kwargs.pop('item_id')
+    #     # self.user = kwargs.pop('user')
+    #
+    #     self.custom_data = kwargs.copy()
+    #     del self.custom_data['item_id']
+    #     del self.custom_data['user']
+    #     self.user_data = self.custom_data['data'].copy()
+    #     del self.user_data['paper']
+    #     del self.user_data['cover']
+    #     del self.user_data['manager']
+    #     del self.user_data['designer']
+    #     del self.user_data['description']
+    #     del self.user_data['quantity']
+    #     self.custom_data['data'] = self.user_data
+    #     # self.data['data'] = {
+    #     #     'encoding': 'utf-8',
+    #     #     'csrfmiddlewaretoken': kwargs["data"]['csrfmiddlewaretoken'],
+    #     #     'item': kwargs["data"]['item'],
+    #     #     'size': kwargs["data"]['size'],
+    #     # }
+    #     # self.data['files'] = kwargs.files
+    #     super().__init__(*args, **self.custom_data)
+
+    # item = forms.ModelChoiceField(
+    #     queryset=None, label='Одиниця',
+    #     widget=forms.HiddenInput()
+    # )
+    # size = forms.ModelChoiceField(
+    #     queryset=None,
+    #     label="Розмір",
+    #     widget=forms.HiddenInput()
+    # )
+
+    image = forms.ImageField(
+        label='Лице',
+        widget=forms.ClearableFileInput(
+            attrs={
+                "name": "file",
+                "accept": ".jpeg, .jpg, .tif, .pdf",
+                "id": "front-image-button",
+                "multiple": True,
+            },
+        ),
+        # validators=[
+        #     validate_image_file_extension,
+        #     validate_image_color_mode,
+        #     validate_image_format
+        # ]
+    )
+    def clen(self):
+        pass
+
+    def clean_image(self):
+        photos = self.files.getlist('photo')
+        image = self.cleaned_data.get('image', False)
+        self.start_image_validate(image)
+        return image
+
+    def start_image_validate(self, image):
+        form_size = self.cleaned_data['size'].width, self.cleaned_data['size'].height
+        if image:
+            self.validate_image_size(image.image, form_size)
+            self.validate_image_dpi(image.image, form_size)
+
+    def validate_image_size(self, image, form_size):
+        image_size = get_image_size(image)
+        cut_value = Category.objects.get(item__pk=self.cleaned_data['item'].pk).cut_size
+
+        for index, image in enumerate(image_size):
+            if image != form_size[index] + cut_value * 2:
+                raise ValidationError(_(f'{image_size} is not correct must be{form_size[index] + cut_value}'))
+
+    def validate_image_dpi(self, image, form_size):
+        image_dpi = get_image_dpi(image, form_size)
+        dpi_from_model = getattr(Item.objects.get(pk=self.cleaned_data['item'].pk), 'dpi')
+
+        if image_dpi < dpi_from_model:
+            raise ValidationError(_(f'{image_dpi} is not correct'))
+
+    class Meta:
+        model = ProductImage
+        fields = [
+            'image',
+        ]
+
+
 class ProductForm(forms.ModelForm):
     item = forms.ModelChoiceField(
         queryset=None, label='Одиниця',
@@ -262,37 +382,37 @@ class ProductForm(forms.ModelForm):
             }
         )
     )
-    front_image = forms.ImageField(
-        label='Лице',
-        widget=forms.FileInput(
-            attrs={
-                "name": "file",
-                "accept": ".jpeg, .jpg, .tif, .pdf",
-                "id": "front-image-button"
-            },
-        ),
-        validators=[
-            validate_image_file_extension,
-            validate_image_color_mode,
-            validate_image_format
-        ]
-    )
-    back_image = forms.ImageField(
-        label='Зворот',
-        required=False,
-        widget=forms.FileInput(
-            attrs={
-                "name": "file",
-                "accept": ".jpeg, .jpg, .tif, .pdf",
-                "id": "back-image-button"
-            },
-        ),
-        validators=[
-            validate_image_file_extension,
-            validate_image_color_mode,
-            validate_image_format
-        ]
-    )
+    # front_image = forms.ImageField(
+    #     label='Лице',
+    #     widget=forms.FileInput(
+    #         attrs={
+    #             "name": "file",
+    #             "accept": ".jpeg, .jpg, .tif, .pdf",
+    #             "id": "front-image-button"
+    #         },
+    #     ),
+    #     validators=[
+    #         validate_image_file_extension,
+    #         validate_image_color_mode,
+    #         validate_image_format
+    #     ]
+    # )
+    # back_image = forms.ImageField(
+    #     label='Зворот',
+    #     required=False,
+    #     widget=forms.FileInput(
+    #         attrs={
+    #             "name": "file",
+    #             "accept": ".jpeg, .jpg, .tif, .pdf",
+    #             "id": "back-image-button"
+    #         },
+    #     ),
+    #     validators=[
+    #         validate_image_file_extension,
+    #         validate_image_color_mode,
+    #         validate_image_format
+    #     ]
+    # )
 
     def __init__(self, *args, **kwargs):
         self.item_pk = kwargs.pop('item_id')
@@ -319,43 +439,43 @@ class ProductForm(forms.ModelForm):
             self.fields['designer'].choices = [(designer[0].id, designer[0])]
             self.fields['manager'].queryset = Manager.objects.all()
 
-    def clean_front_image(self):
-        image = self.cleaned_data.get('front_image', False)
-        self.start_image_validate(image)
-        return image
-
-    def clean_back_image(self):
-        image = self.cleaned_data.get('back_image', False)
-        self.start_image_validate(image)
-        return image
-
-    def start_image_validate(self, image):
-        form_size = self.cleaned_data['size'].width, self.cleaned_data['size'].height
-        if image:
-            self.validate_image_size(image.image, form_size)
-            self.validate_image_dpi(image.image, form_size)
-
-    def validate_image_size(self, image, form_size):
-        image_size = get_image_size(image)
-        cut_value = Category.objects.get(item__pk=self.cleaned_data['item'].pk).cut_size
-
-        for index, image in enumerate(image_size):
-            if image != form_size[index] + cut_value * 2:
-                raise ValidationError(_(f'{image_size} is not correct must be{form_size[index] + cut_value}'))
-
-    def validate_image_dpi(self, image, form_size):
-        image_dpi = get_image_dpi(image, form_size)
-        dpi_from_model = getattr(Item.objects.get(pk=self.cleaned_data['item'].pk), 'dpi')
-
-        if image_dpi < dpi_from_model:
-            raise ValidationError(_(f'{image_dpi} is not correct'))
+    # def clean_front_image(self):
+    #     image = self.cleaned_data.get('front_image', False)
+    #     self.start_image_validate(image)
+    #     return image
+    #
+    # def clean_back_image(self):
+    #     image = self.cleaned_data.get('back_image', False)
+    #     self.start_image_validate(image)
+    #     return image
+    #
+    # def start_image_validate(self, image):
+    #     form_size = self.cleaned_data['size'].width, self.cleaned_data['size'].height
+    #     if image:
+    #         self.validate_image_size(image.image, form_size)
+    #         self.validate_image_dpi(image.image, form_size)
+    #
+    # def validate_image_size(self, image, form_size):
+    #     image_size = get_image_size(image)
+    #     cut_value = Category.objects.get(item__pk=self.cleaned_data['item'].pk).cut_size
+    #
+    #     for index, image in enumerate(image_size):
+    #         if image != form_size[index] + cut_value * 2:
+    #             raise ValidationError(_(f'{image_size} is not correct must be{form_size[index] + cut_value}'))
+    #
+    # def validate_image_dpi(self, image, form_size):
+    #     image_dpi = get_image_dpi(image, form_size)
+    #     dpi_from_model = getattr(Item.objects.get(pk=self.cleaned_data['item'].pk), 'dpi')
+    #
+    #     if image_dpi < dpi_from_model:
+    #         raise ValidationError(_(f'{image_dpi} is not correct'))
 
     class Meta:
         model = Product
         fields = [
             'item', 'name', 'size', 'paper', 'cover',
             'description', 'manager', 'designer',
-            'front_image', 'back_image', 'quantity'
+            'quantity'
         ]
 
 
@@ -369,8 +489,8 @@ class ProductEditForm(forms.ModelForm):
     description = forms.CharField(label='Опис', max_length=440, required=False, widget=forms.Textarea(attrs={
         'title': 'Опис',
     }))
-    front_image = forms.ImageField(label='Лице')
-    back_image = forms.ImageField(label='Зворот', required=False)
+    # front_image = forms.ImageField(label='Лице')
+    # back_image = forms.ImageField(label='Зворот', required=False)
 
     def __init__(self, *args, **kwargs):
 
@@ -439,5 +559,6 @@ class ProductEditForm(forms.ModelForm):
         model = Product
         fields = [
             'name', 'size', 'paper', 'cover', 'description',
-            'manager', 'designer', 'quantity', 'front_image', 'back_image'
+            'manager', 'designer', 'quantity',
+            # 'front_image', 'back_image'
         ]

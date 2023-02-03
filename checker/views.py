@@ -18,7 +18,7 @@ from django.contrib.auth import views as auth_views
 from django.http import FileResponse, HttpResponse, JsonResponse
 
 from check_image.settings import MEDIA_ROOT, MEDIA_URL
-from checker.forms import FileForm, ProductForm, ProductEditForm, UserLoginForm
+from checker.forms import FileForm, ProductForm, ProductEditForm, UserLoginForm, ProductImageForm
 from .filters import ProductFilter, ProductFilterForManager, ProductFilterForDesigner
 from .models import *
 
@@ -93,6 +93,18 @@ class LoginView(auth_views.LoginView):
     next_page = 'checker:products_list'
 
 
+# def image_multiple_form_view(request):
+#     form_class = TestImageForm
+#     template = 'checked/image-multiple-form-view.html'
+#     if request.method == 'POST':
+#         form = form_class(request.POST, request.FILES)
+#
+#         if form.is_valid():
+#             data = form.cleaned_data
+#             print(data)
+#     return render(request, template, {"form": form_class()})
+
+
 class ProductFormView(FormView):
     template_name = 'checked/test_new_form.html'
     form_class = ProductForm
@@ -103,6 +115,7 @@ class ProductFormView(FormView):
         """Insert the form into the context dict."""
         if "form" not in kwargs:
             kwargs["form"] = self.get_form()
+            # kwargs['image_form'] = ProductImageForm()
             item = Item.objects.get(pk=kwargs['pk'])
             kwargs['item_name'] = item.name
             kwargs['item_category'] = item.category
@@ -130,19 +143,40 @@ class ProductFormView(FormView):
         form = self.get_form()
         if form.is_valid():
             data = form.cleaned_data
+            image_validator = create_validator(data)
+            image_list = request.FILES.getlist('images')
 
             product = form.save(commit=False)
 
             product.item = Item.objects.get(pk=self.item_id)
             product.status = ProductStatus.objects.get(pk=1)
-            product.front_image = rename_image(data['front_image'], data['name'], front=True)
-            product.back_thumbnail = None
-            product.front_thumbnail = compresing_image(data['front_image'])
-            if data['back_image']:
-                product.back_image = rename_image(data['back_image'], data['name'])
-                product.back_thumbnail = compresing_image(data['back_image'])
 
             product.save()
+
+            for image in image_list:
+                # Замінити raise Validation error на messages error
+                # прочитати про виключення та як налаштовувати помилки валідації в Django
+                # Добавити можливіть виводу помилки на екран форми
+                # Глянути на код і зайнятись рефакторингом
+                image_validator(image)
+
+            for image in image_list:
+                renamed_image = rename_image(image, data['name'], front=True)
+                thumbnail = compresing_image(renamed_image)
+                # Глянути на метод save в ProductImage, виправити в ньому недоліки
+                # Переписати код в Detail View та temaple щоб коректно відображати нові зображення
+                # Edit View виправити та її форму
+                #
+                ProductImage.objects.create(image=renamed_image, thumbnail=thumbnail, product=product)
+
+
+            # product.front_image = rename_image(data['front_image'], data['name'], front=True)
+            # product.back_thumbnail = None
+            # product.front_thumbnail = compresing_image(data['front_image'])
+            # if data['back_image']:
+            #     product.back_image = rename_image(data['back_image'], data['name'])
+            #     product.back_thumbnail = compresing_image(data['back_image'])
+
 
             path = os.path.join(MEDIA_ROOT, 'tmp_img')
             shutil.rmtree(path)

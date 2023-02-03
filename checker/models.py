@@ -157,6 +157,27 @@ def get_name(instance):
     return name
 
 
+class ProductImage(models.Model):
+    image = models.ImageField(upload_to=product_directory_path, verbose_name='Лице', null=True)
+    thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Мініатюра', null=True)
+    product = models.ForeignKey("Product", on_delete=models.CASCADE, verbose_name='Продукт')
+
+    def save(self, *args, **kwargs):
+        if self.pk:
+            this_image = ProductImage.objects.get(pk=self.pk)
+
+            folder_path = this_image.image.path.split('\\')
+            new_folder_path = '\\'.join(folder_path[:-1])
+
+            if this_image.image != self.front_image:
+                this_image.image.delete(save=False)
+                this_image.thumbnail.delete(save=False)
+            if this_image.name != self.name:
+                shutil.rmtree(new_folder_path)
+
+        super(ProductImage, self).save(*args, **kwargs)
+
+
 class Product(models.Model):
     name = models.CharField(max_length=200, verbose_name='Назва')
     item = models.ForeignKey(Item, on_delete=models.CASCADE, verbose_name='Елемент', related_name='item')
@@ -169,10 +190,10 @@ class Product(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Дата створення')
     updated_at = models.DateTimeField(auto_now=True)
     status = models.ForeignKey(ProductStatus, on_delete=models.CASCADE)
-    front_image = models.ImageField(upload_to=product_directory_path, verbose_name='Лице', null=True)
-    back_image = models.ImageField(upload_to=product_directory_path, verbose_name='Зворот', null=True)
-    front_thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Лице мініатюра', null=True)
-    back_thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Зворот мініатюра', null=True)
+    # front_image = models.ImageField(upload_to=product_directory_path, verbose_name='Лице', null=True)
+    # back_image = models.ImageField(upload_to=product_directory_path, verbose_name='Зворот', null=True)
+    # front_thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Лице мініатюра', null=True)
+    # back_thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Зворот мініатюра', null=True)
     quantity = models.PositiveIntegerField(verbose_name='Кількість', default=1, null=True)
 
     def get_absolute_url(self):
@@ -181,24 +202,23 @@ class Product(models.Model):
     def __str__(self):
         return f'{self.name} {self.item} {self.size} {self.paper} {self.cover} {self.manager} {self.designer}'
 
-    def save(self, *args, **kwargs):
-        if self.pk:
-            this_product = Product.objects.get(pk=self.pk)
-
-            folder_path = this_product.front_image.path.split('\\')
-            new_folder_path = '\\'.join(folder_path[:-1])
-
-            if this_product.front_image != self.front_image:
-                this_product.front_image.delete(save=False)
-                this_product.front_thumbnail.delete(save=False)
-            if this_product.back_image != self.back_image:
-                this_product.back_image.delete(save=False)
-                this_product.back_thumbnail.delete(save=False)
-            if this_product.name != self.name:
-                shutil.rmtree(new_folder_path)
-
-
-        super(Product, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     if self.pk:
+    #         this_product = Product.objects.get(pk=self.pk)
+    #
+    #         folder_path = this_product.front_image.path.split('\\')
+    #         new_folder_path = '\\'.join(folder_path[:-1])
+    #
+    #         if this_product.front_image != self.front_image:
+    #             this_product.front_image.delete(save=False)
+    #             this_product.front_thumbnail.delete(save=False)
+    #         if this_product.back_image != self.back_image:
+    #             this_product.back_image.delete(save=False)
+    #             this_product.back_thumbnail.delete(save=False)
+    #         if this_product.name != self.name:
+    #             shutil.rmtree(new_folder_path)
+    #
+    #     super(Product, self).save(*args, **kwargs)
 
     class Meta:
         verbose_name = 'Товар'
