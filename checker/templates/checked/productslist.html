@@ -62,7 +62,7 @@
         {% for obj in page_obj %}
             <div class="content__item-container">
                 <div class="content__item-decor"></div>
-                <div class="content__item-content container status_in_work">
+                <div class="content__item-content container {{ obj.status.div_status_class }}">
                     <div class="content__item-element content__item-element-title">
                         <h6 class="content__item-title">Назва:</h6>
                         <p class="content__item-text">
@@ -116,10 +116,10 @@
                         <a href="{% url 'checker:edit_product' obj.pk %}" style="color: black;" class="content__item-text">Edit</a>
                     </div>
                 </div>
-                <div class="content__item-status container status_in_work">
+                <div class="content__item-status container {{ obj.status.div_status_class }}">
                     <p>Статус:</p>
-                    <div class="status_image in-work-image"></div>
-                    <p>в роботі</p>
+                    <div class="status_image {{ obj.status.img_status_class }}"></div>
+                    <p>{{ obj.status.name }}</p>
                 </div>
             </div>
         {% endfor %}

@@ -17,10 +17,16 @@
     <li>{{ product.created_at }}</li>
     <li>{{ product.status }}</li>
     <li>{{ product.quantity }}</li>
-    <li><img src="{{ product.front_thumbnail.url }}" alt=""></li>
-    {% if product.back_thumbnail %}
-        <li><img src="{{ product.back_thumbnail.url }}" alt=""></li>
+    {% if images %}
+        {% for image in images %}
+            <li><img src="{{ image.thumbnail.url }}" alt=""></li>
+        {% endfor %}
     {% endif %}
+
+{#    <li><img src="{{ product.front_thumbnail.url }}" alt=""></li>#}
+{#    {% if product.back_thumbnail %}#}
+{#        <li><img src="{{ product.back_thumbnail.url }}" alt=""></li>#}
+{#    {% endif %}#}
 </ul>
 </body>
 </html>

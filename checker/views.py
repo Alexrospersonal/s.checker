@@ -1,5 +1,6 @@
 import os
 
+from django.contrib.messages import get_messages
 from django.core.files.uploadedfile import TemporaryUploadedFile, InMemoryUploadedFile
 from django.db.models.fields.files import ImageFieldFile
 from django.shortcuts import redirect, render, get_list_or_404
@@ -117,7 +118,9 @@ class ProductFormView(FormView):
             kwargs["form"] = self.get_form()
             # kwargs['image_form'] = ProductImageForm()
             item = Item.objects.get(pk=kwargs['pk'])
+            pages_number = PagesNumber.objects.filter(items__id=item.id)
             kwargs['item_name'] = item.name
+            kwargs['pages_number'] = pages_number
             kwargs['item_category'] = item.category
 
         return super().get_context_data(**kwargs)
@@ -143,7 +146,7 @@ class ProductFormView(FormView):
         form = self.get_form()
         if form.is_valid():
             data = form.cleaned_data
-            image_validator = create_validator(data)
+            image_validator = create_validator(data, request)
             image_list = request.FILES.getlist('images')
 
             product = form.save(commit=False)
@@ -151,14 +154,15 @@ class ProductFormView(FormView):
             product.item = Item.objects.get(pk=self.item_id)
             product.status = ProductStatus.objects.get(pk=1)
 
-            product.save()
+            # Глянути на код і зайнятись рефакторингом
+            image_validator(image_list)
+            messages_storage = get_messages(request)
 
-            for image in image_list:
-                # Замінити raise Validation error на messages error
-                # прочитати про виключення та як налаштовувати помилки валідації в Django
-                # Добавити можливіть виводу помилки на екран форми
-                # Глянути на код і зайнятись рефакторингом
-                image_validator(image)
+            if messages_storage:
+                print(messages_storage)
+                return render(request, self.template_name, {'form': form})
+
+            product.save()
 
             for image in image_list:
                 renamed_image = rename_image(image, data['name'], front=True)
@@ -177,9 +181,9 @@ class ProductFormView(FormView):
             #     product.back_image = rename_image(data['back_image'], data['name'])
             #     product.back_thumbnail = compresing_image(data['back_image'])
 
-
-            path = os.path.join(MEDIA_ROOT, 'tmp_img')
-            shutil.rmtree(path)
+            if os.path.exists(os.path.join(MEDIA_ROOT, 'tmp_img')):
+                path = os.path.join(MEDIA_ROOT, 'tmp_img')
+                shutil.rmtree(path)
 
             return redirect('checker:products_list')
 
@@ -190,6 +194,10 @@ class ProductDetailView(DetailView):
     model = Product
     template_name = 'checked/product.html'
     context_object_name = 'product'
+
+    def get_context_data(self, **kwargs):
+        kwargs['images'] = ProductImage.objects.filter(product_id=self.object.id)
+        return super().get_context_data(**kwargs)
 
 
 # class MainView(LoginRequiredMixin, TemplateView):
@@ -302,7 +310,6 @@ class ItemsListView(ListView):
 
 # Поправити view можливо віднаслідуватись від ProductFormView та внести зміти в Form можливо теж віднаслідуватись
 
-
 class UpdateProductView(UpdateView):
     model = Product
     form_class = ProductEditForm
@@ -320,7 +327,6 @@ class UpdateProductView(UpdateView):
 
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
-        # super().post(request, *args, **kwargs)
         form = self.get_form()
         if form.is_valid():
             """Якщо зображення замінюється то його попереднє треба видалити
@@ -347,7 +353,7 @@ class UpdateProductView(UpdateView):
                 product.back_thumbnail = compresing_image(data['back_image'])
 
             product.status = ProductStatus.objects.get(pk=1)
-            front_image_path = product.front_image.path
+            # front_image_path = product.front_image.path
             product.save()
             # if this_product.name != self.name:
             #     folder_path = this_product.front_image.path.split('\\')

@@ -21,5 +21,6 @@ admin.site.register(Designer)
 admin.site.register(User)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductStatus)
+admin.site.register(PagesNumber)
 
 

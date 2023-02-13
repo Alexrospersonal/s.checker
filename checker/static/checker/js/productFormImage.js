@@ -1,13 +1,53 @@
-let frontImageInput = document.querySelector('#front-image-button');
-let backImageInput = document.querySelector('#back-image-button');
+// let frontImageInput = document.querySelector('#front-image-button');
+// let backImageInput = document.querySelector('#back-image-button');
 
 
 let frontImageContainer = document.getElementById('front-img');
 let backImageContainer = document.getElementById('back-img');
 
-frontImageInput.addEventListener('change', (e) => createImage(frontImageContainer, e));
-backImageInput.addEventListener('change', (e) => createImage(backImageContainer, e));
+let addImageButtonsContainer = document.querySelector('.add-image-buttons-container');
 
+// frontImageInput.addEventListener('change', (e) => createImage(frontImageContainer, e));
+// backImageInput.addEventListener('change', (e) => createImage(backImageContainer, e));
+
+function createButton(num) {
+    addImageButtonsContainer.innerHTML = '';
+
+    for (let i = 0; i < num; i++) {
+        let labelFor = document.createElement('label');
+        labelFor.setAttribute("for", "front-file");
+        labelFor.className = "item__title"
+        labelFor.innerText = "Файл";
+
+        let labelInput = document.createElement('label');
+        labelInput.className = "input-file";
+
+        let input = document.createElement('input');
+        input.setAttribute("type", "file");
+        input.setAttribute("name", "images");
+        input.setAttribute("accept", ".jpeg, .jpg, .tif, .pdf");
+        input.id = "front-image-button";
+        input.addEventListener('change', (e) => {
+            e.target.closest('.input-file').querySelector('.input-file-text').innerText = e.target.files[0].name;
+            createImage(frontImageContainer, e);
+        });
+
+        let spanFile = document.createElement('span');
+        spanFile.className = "input-file-btn";
+        spanFile.innerText = 'Виберіть файл';
+
+        let spanSize = document.createElement('span');
+        spanSize.className = "input-file-text";
+        spanSize.innerText = 'Максимум 100мб';
+
+        labelInput.appendChild(input);
+        labelInput.appendChild(spanFile);
+        labelInput.appendChild(spanSize);
+
+        addImageButtonsContainer.appendChild(labelFor);
+        addImageButtonsContainer.appendChild(labelInput);
+    }
+}
 
 const createImage = async (image_container, e) => {
     let csrf_token = document.getElementsByName('csrfmiddlewaretoken')[0].value

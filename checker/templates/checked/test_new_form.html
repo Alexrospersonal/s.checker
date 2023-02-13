@@ -3,15 +3,30 @@
 
 
 {% block content_wrapper %}
+    {% if messages %}
+        <div class="errors-container">
+            {% for message in messages %}
+                <div class="bar error">
+                    <div class="close" onclick="this.parentElement.remove()">X</div>
+                    <i class="ico">&#9747;</i> {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
     <div class="add-file__wrapper">
         <div class="content__image-container container">
             <div class="content__container">
                     <h2>Завантажити файли</h2>
                 </div>
             <div class="content__container">
-                <button class="submit-button" onclick="addOnePageProduct()">Односторнній</button>
-                <button class="submit-button" onclick="addTwoPageProduct()">Двосторонній</button>
-                <button class="submit-button" onclick="addMultiPageProduct()">Багатосторінковий</button>
+                {% if pages_number %}
+                    {% for number in pages_number %}
+                        <button class="submit-button" onclick="createButton({{ number.pages }})">Сторін: {{ number.pages }}</button>
+                    {% endfor %}
+{#                <button class="submit-button" onclick="addOnePageProduct()">Односторнній</button>#}
+{#                <button class="submit-button" onclick="addTwoPageProduct()">Двосторонній</button>#}
+{#                <button class="submit-button" onclick="addMultiPageProduct()">Багатосторінковий</button>#}
+                {% endif %}
             </div>
             <div class="load-image">
                 <div class="content__container">
@@ -141,15 +156,13 @@
                         {{ form.description }}
                     </div>
                     <div class="form__item">
-                        <div>
-                            <label for="front-file" class="item__title">Файл</label>
-                            <label class="input-file">
-{#                                {{ image_form.image }}#}
-{#                                {{ image_form.image.errors }}#}
-                                <input type="file" name="images" accept=".jpeg, .jpg, .tif, .pdf" id="front-image-button" multiple="" required="">
-                                <span class="input-file-btn">Виберіть файли</span>
-                                <span class="input-file-text">Максимум 100мб</span>
-                            </label>
+                        <div class="add-image-buttons-container">
+{#                            <label for="front-file" class="item__title">Файл</label>#}
+{#                            <label class="input-file">#}
+{#                                <input type="file" name="images" accept=".jpeg, .jpg, .tif, .pdf" id="front-image-button" multiple="" required="">#}
+{#                                <span class="input-file-btn">Виберіть файли</span>#}
+{#                                <span class="input-file-text">Максимум 100мб</span>#}
+{#                            </label>#}
                         </div>
 {#                            <div>#}
 {#                                <label for="back-file" class="item__title">Зворот</label>#}
@@ -180,6 +193,6 @@
 {% block script %}
     {% load static %}
     <script src="{% static 'checker/js/jquery-3.6.3.min.js' %}"></script>
-    <script src="{% static 'checker/js/add_product.js' %}"></script>
     <script src="{% static 'checker/js/productFormImage.js' %}"></script>
+{#    <script src="{% static 'checker/js/add_product.js' %}"></script>#}
 {% endblock %}

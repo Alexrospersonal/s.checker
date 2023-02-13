@@ -1,5 +1,6 @@
 import os
 import shutil
+from datetime import datetime
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
@@ -26,7 +27,6 @@ class Item(models.Model):
     name = models.CharField(max_length=150, verbose_name='Назва')
     category = models.ForeignKey(Category, on_delete=models.PROTECT)
     dpi = models.SmallIntegerField(verbose_name="DPI", null=True)
-    # size = models.ManyToManyField('ItemSize', verbose_name='Розмір')
 
     class Meta:
         verbose_name = 'Одиниця'
@@ -132,6 +132,8 @@ class Designer(models.Model):
 
 class ProductStatus(models.Model):
     name = models.CharField(max_length=100, verbose_name='Статус')
+    div_status_class = models.CharField(max_length=50, verbose_name='Стиль блоку', null=True, blank=True)
+    img_status_class = models.CharField(max_length=50, verbose_name='Стиль зображення', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -143,23 +145,24 @@ class ProductStatus(models.Model):
 
 def product_directory_path(instance, filename):
     product_name = get_name(instance)
-    return f'{instance.item.category.name}/{instance.item.name}/{product_name}/{filename}'
+    return f'{instance.product.item.category.name}/{instance.product.item.name}/{product_name}/{filename}'
 
 
 def thumbnail_directory_path(instance, filename):
     product_name = get_name(instance)
-    return f'{instance.item.category.name}/{instance.item.name}/{product_name}/thumbnails/{filename}'
+    return f'{instance.product.item.category.name}/{instance.product.item.name}/{product_name}/thumbnails/{filename}'
 
 
 def get_name(instance):
-    name = instance.name
+    name = instance.product.name
     name = name.replace(' ', '_')
+    name = f'{name}-{datetime.now().strftime("%d_%m_%Y_%H_%M")}'
     return name
 
 
 class ProductImage(models.Model):
-    image = models.ImageField(upload_to=product_directory_path, verbose_name='Лице', null=True)
-    thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Мініатюра', null=True)
+    image = models.ImageField(upload_to=product_directory_path, verbose_name='Зображення', null=True, max_length=300)
+    thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Мініатюра', null=True, max_length=300)
     product = models.ForeignKey("Product", on_delete=models.CASCADE, verbose_name='Продукт')
 
     def save(self, *args, **kwargs):
@@ -176,6 +179,18 @@ class ProductImage(models.Model):
                 shutil.rmtree(new_folder_path)
 
         super(ProductImage, self).save(*args, **kwargs)
+
+
+class PagesNumber(models.Model):
+    pages = models.SmallIntegerField(verbose_name='Кількість сторінок')
+    items = models.ManyToManyField(Item, verbose_name='Елементи')
+
+    def __str__(self):
+        return f"Pages: {self.pages}"
+
+    class Meta:
+        verbose_name = 'Сторінка'
+        verbose_name_plural = 'Сторінки'
 
 
 class Product(models.Model):

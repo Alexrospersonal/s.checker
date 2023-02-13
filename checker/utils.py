@@ -1,10 +1,12 @@
 import os
+from random import randint
 from importlib._common import _
 from io import BytesIO
 
 from PIL import Image
 from django.core.exceptions import ValidationError
 from django.core.files import File
+from django.contrib import messages
 
 from checker.models import ItemCover, ItemPaper, Manager, Designer, Category, Item
 
@@ -24,7 +26,6 @@ def create_choices(qs_object):
 def compresing_image(image):
     original_img = Image.open(image)
     copy_of_image = original_img.copy()
-    # copy_of_image = image.copy()
 
     copy_of_image.thumbnail(size=(512, 512), resample=Image.Resampling.LANCZOS)
     img_io = BytesIO()
@@ -38,8 +39,9 @@ def compresing_image(image):
 def rename_image(image, product_name, front=False):
     name, ext = os.path.splitext(image.name)
     new_product_name = product_name.replace(' ', '_')
+    sufix = str(randint(1000, 9000))
     # Добавити можливіть перевірки якщо тільки 2 файли то писати лице і зворот
-    new_name = f'{new_product_name}_лице{ext}'
+    new_name = f'{new_product_name}_{sufix}{ext}'
     image.name = new_name
     return image
 
@@ -69,50 +71,54 @@ def get_image_dpi( img, form_size):
     return round(((img.width * 25.4 / form_size[0]) + (img.height * 25.4 / form_size[1])) / 2)
 
 
-def create_validator(data):
+def create_validator(data, request):
     cleaned_data = data
+    request = request
 
-    def complex_validator(img):
-        image = Image.open(img)
-        validate_image_color_mode(image)
-        validate_image_format(image)
-        start_image_validate(cleaned_data, image)
+    def complex_validator(image_list):
+        for img in image_list:
+            image = Image.open(img)
+            validate_image_color_mode(image)
+            validate_image_format(image)
+            start_image_validate(image)
+
+    def validate_image_color_mode(value):
+        color_mode = value.mode
+        if color_mode != 'CMYK':
+            messages.add_message(request, messages.ERROR, f'Color mode is {color_mode}')
+
+    def validate_image_format(value):
+        image_format = value.format
+        if image_format not in ('TIFF', 'JPEG', 'PDF'):
+            messages.add_message(request, messages.ERROR, f'{image_format} is not correct')
+
+    def start_image_validate(image):
+        form_size = cleaned_data['size'].width, cleaned_data['size'].height
+        if image:
+            validate_image_size(image, form_size)
+            validate_image_dpi(image, form_size)
+
+    def validate_image_size(image, form_size):
+        error_size = []
+        image_size = get_image_size(image)
+
+        cut_value = Category.objects.get(item__pk=cleaned_data['item'].pk).cut_size
+
+        for index, image in enumerate(image_size):
+            if image != form_size[index] + cut_value * 2:
+                error_size.append(form_size[index] + cut_value)
+
+        if error_size:
+            messages.add_message(request, messages.ERROR,
+                                 f'Розмір файлу {image_size[0]}x{image_size[0]}мм, потрібно: {error_size[0]}x{error_size[1]}мм')
+
+    def validate_image_dpi(image, form_size):
+        image_dpi = get_image_dpi(image, form_size)
+        dpi_from_model = getattr(Item.objects.get(pk=cleaned_data['item'].pk), 'dpi')
+
+        if image_dpi < dpi_from_model:
+            messages.add_message(request, messages.ERROR, f'{image_dpi} is not correct')
 
     return complex_validator
 
 
-def validate_image_color_mode(value):
-    color_mode = value.mode
-    if color_mode != 'CMYK':
-        raise ValidationError(_(f'Color mode is {color_mode}'))
-
-
-def validate_image_format(value):
-    image_format = value.format
-    if image_format not in ('TIFF', 'JPEG', 'PDF'):
-        raise ValidationError(_(f'{image_format} is not correct'))
-
-
-def start_image_validate(cleaned_data, image):
-    form_size = cleaned_data['size'].width, cleaned_data['size'].height
-    if image:
-        validate_image_size(cleaned_data, image, form_size)
-        validate_image_dpi(cleaned_data, image, form_size)
-
-
-def validate_image_size(cleaned_data, image, form_size):
-    image_size = get_image_size(image)
-
-    cut_value = Category.objects.get(item__pk=cleaned_data['item'].pk).cut_size
-
-    for index, image in enumerate(image_size):
-        if image != form_size[index] + cut_value * 2:
-            raise ValidationError(_(f'{image_size} is not correct must be{form_size[index] + cut_value}'))
-
-
-def validate_image_dpi(cleaned_data, image, form_size):
-    image_dpi = get_image_dpi(image, form_size)
-    dpi_from_model = getattr(Item.objects.get(pk=cleaned_data['item'].pk), 'dpi')
-
-    if image_dpi < dpi_from_model:
-        raise ValidationError(_(f'{image_dpi} is not correct'))
