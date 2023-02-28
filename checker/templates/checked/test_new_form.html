@@ -14,6 +14,18 @@
         </div>
     {% endif %}
     <div class="add-file__wrapper">
+
+        <div class="modal hidden">
+            <button class="arrow prev" id="move-left"><<</button>
+            <div class="galery-wrapper">
+                <ul id="galery"></ul>
+            </div>
+            <button class="arrow next" id="move-right">>></button>
+
+            <button class="btn-close">⨉</button>
+        </div>
+        <div class="overlay hidden"></div>
+
         <div class="content__image-container container">
             <div class="content__container">
                     <h2>Завантажити файли</h2>
@@ -21,7 +33,7 @@
             <div class="content__container">
                 {% if pages_number %}
                     {% for number in pages_number %}
-                        <button class="submit-button" onclick="createButton({{ number.pages }})">Сторін: {{ number.pages }}</button>
+                        <button class="submit-button" onclick="createButton({{ number.pages }})" data-images="{{ number.pages }}">Сторін: {{ number.pages }}</button>
                     {% endfor %}
 {#                <button class="submit-button" onclick="addOnePageProduct()">Односторнній</button>#}
 {#                <button class="submit-button" onclick="addTwoPageProduct()">Двосторонній</button>#}
@@ -29,14 +41,25 @@
                 {% endif %}
             </div>
             <div class="load-image">
-                <div class="content__container">
-                    <label for="front-img" class="item__title">Лице</label>
-                    <div class="image-container" id="front-img"></div>
-                </div>
-                <div class="content__container">
-                    <label for="back-img" class="item__title">Зворот</label>
-                    <div class="image-container" id="back-img"></div>
-                </div>
+                {% if images %}
+                    {% for image in images %}
+                        <div class="thumbnail__container" id="wrapper-div-0">
+                            <label class="item__title">Файл 1</label>
+                            <div class="image-container">
+                                <img src="{{ image.thumbnail.url }}" alt="" width="150">
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+{#                <div class="content__container">#}
+{#                    <label for="front-img" class="item__title">Лице</label>#}
+{#                    <div class="image-container" id="front-img"></div>#}
+{#                </div>#}
+{#                <div class="content__container">#}
+{#                    <label for="back-img" class="item__title">Зворот</label>#}
+{#                    <div class="image-container" id="back-img"></div>#}
+{#                </div>#}
 {#                <div class="content__container">#}
 {#                        <fieldset form="product-form">#}
 {#                            <div>#}

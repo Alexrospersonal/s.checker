@@ -181,6 +181,7 @@ class ProductImage(models.Model):
         super(ProductImage, self).save(*args, **kwargs)
 
 
+
 class PagesNumber(models.Model):
     pages = models.SmallIntegerField(verbose_name='Кількість сторінок')
     items = models.ManyToManyField(Item, verbose_name='Елементи')
@@ -210,6 +211,13 @@ class Product(models.Model):
     # front_thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Лице мініатюра', null=True)
     # back_thumbnail = models.ImageField(upload_to=thumbnail_directory_path, verbose_name='Зворот мініатюра', null=True)
     quantity = models.PositiveIntegerField(verbose_name='Кількість', default=1, null=True)
+
+    def delete(self, using=None, keep_parents=False):
+        image = ProductImage.objects.filter(product_id=self.pk)[0].image.path
+        path = os.path.dirname(image)
+        super().delete(using=None, keep_parents=False)
+        shutil.rmtree(path)
+        print('Yes')
 
     def get_absolute_url(self):
         return f'/products/{self.pk}'

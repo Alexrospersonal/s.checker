@@ -1,4 +1,5 @@
 import os
+import zipfile
 
 from django.contrib.messages import get_messages
 from django.core.files.uploadedfile import TemporaryUploadedFile, InMemoryUploadedFile
@@ -7,7 +8,8 @@ from django.shortcuts import redirect, render, get_list_or_404
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, TemplateView
-from django.views.generic.edit import FormView, CreateView, UpdateView
+from django.views.generic.detail import SingleObjectMixin, BaseDetailView
+from django.views.generic.edit import FormView, CreateView, UpdateView, DeleteView, DeletionMixin
 from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.files.storage import FileSystemStorage
 # from django_filters.views import FilterMixin, FilterView
@@ -16,7 +18,7 @@ from django.core.files import File
 from django.contrib.auth.views import logout_then_login
 from django.core.paginator import Paginator
 from django.contrib.auth import views as auth_views
-from django.http import FileResponse, HttpResponse, JsonResponse
+from django.http import FileResponse, HttpResponse, JsonResponse, HttpResponseRedirect
 
 from check_image.settings import MEDIA_ROOT, MEDIA_URL
 from checker.forms import FileForm, ProductForm, ProductEditForm, UserLoginForm, ProductImageForm
@@ -58,6 +60,28 @@ def conver_image_view(request):
             'images': absolute_file_url
         }
         response = JsonResponse(img)
+        return response
+
+
+def download_files_view(request, pk):
+    if request.method == 'GET':
+        model_images_list = ProductImage.objects.filter(product__id=pk)
+        zip_file_name = transliteration(Product.objects.get(pk=pk).name.replace(' ', '_') + '.zip')
+        image_list = []
+
+        for model_image in model_images_list:
+            img = model_image.image.open()
+            image_list.append((os.path.basename(img.name), img))
+
+        zip_bytes_buffer = BytesIO()
+        with zipfile.ZipFile(zip_bytes_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            for f in image_list:
+                zf.writestr(f[0], f[1].read())
+
+        zip_files = zip_bytes_buffer.getvalue()
+
+        response = HttpResponse(zip_files, content_type='application/force-download')
+        response['Content-Disposition'] = f'attachment; filename="{zip_file_name}"'
         return response
 
 
@@ -148,6 +172,10 @@ class ProductFormView(FormView):
             data = form.cleaned_data
             image_validator = create_validator(data, request)
             image_list = request.FILES.getlist('images')
+            if not image_list:
+                messages.add_message(request, messages.ERROR, f'Загрузіть зображення')
+                data = self.get_context_data(**kwargs)
+                return render(request, self.template_name, data)
 
             product = form.save(commit=False)
 
@@ -159,8 +187,8 @@ class ProductFormView(FormView):
             messages_storage = get_messages(request)
 
             if messages_storage:
-                print(messages_storage)
-                return render(request, self.template_name, {'form': form})
+                data = self.get_context_data(**kwargs)
+                return render(request, self.template_name, data)
 
             product.save()
 
@@ -310,60 +338,147 @@ class ItemsListView(ListView):
 
 # Поправити view можливо віднаслідуватись від ProductFormView та внести зміти в Form можливо теж віднаслідуватись
 
-class UpdateProductView(UpdateView):
+class DeleteProductView(DeletionMixin, BaseDetailView):
     model = Product
-    form_class = ProductEditForm
-
-    template_name = 'checked/test_new_form.html'
-    template_name_suffix = '_update_form'
-
-    def get_form(self, form_class=None):
-        if form_class is None:
-            form_class = self.form_class
-        kwargs = self.get_form_kwargs()
-        kwargs['user'] = self.request.user
-        form = form_class(**kwargs)
-        return form
+    success_url = reverse_lazy('checker:products_list')
 
     def post(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        form = self.get_form()
-        if form.is_valid():
-            """Якщо зображення замінюється то його попереднє треба видалити
-            дістати з екземпляра моделі зображення і його шлях та видалити
-            потім зрозуміти як працювати з зображеннями які були вже загружені,
-            тобто зробити перевірку якщо зображення не змінювалось то його не трогати
-            а якщо зображення не змінюється то ми його не трогаємо і не виконуємо компресію
-            """
+        return self.delete(request, *args, **kwargs)
 
-            data = form.cleaned_data
-            product = form.save(commit=False)
 
-            print(type(data['front_image']))
-            print(type(data['back_image']))
 
-            print(type(data['front_image']) == InMemoryUploadedFile)
-            print(type(data['back_image']) == InMemoryUploadedFile)
 
-            if type(data['front_image']) == InMemoryUploadedFile:
-                product.front_image = rename_image(data['front_image'], data['name'], front=True)
-                product.front_thumbnail = compresing_image(data['front_image'])
-            if type(data['back_image']) == InMemoryUploadedFile:
-                product.back_image = rename_image(data['back_image'], data['name'])
-                product.back_thumbnail = compresing_image(data['back_image'])
 
-            product.status = ProductStatus.objects.get(pk=1)
-            # front_image_path = product.front_image.path
-            product.save()
-            # if this_product.name != self.name:
-            #     folder_path = this_product.front_image.path.split('\\')
-            #     new_folder_path = '\\'.join(folder_path[:-1])
-            #     this_product.front_image.delete(save=False)
-            #     this_product.front_thumbnail.delete(save=False)
-            #     this_product.back_image.delete(save=False)
-            #     this_product.back_thumbnail.delete(save=False)
-            #     os.removedirs(new_folder_path)
 
-            return redirect('checker:products_list')
+# class UpdateProductView(UpdateView):
+#     model = Product
+#     form_class = ProductEditForm
+#
+#     template_name = 'checked/test_new_form.html'
+#     # template_name_suffix = '_update_form'
+#
+#     # def get_context_data(self, **kwargs):
+#     #     """Insert the form into the context dict."""
+#     #     if "form" not in kwargs:
+#     #         kwargs["form"] = self.get_form()
+#     #         # product = self.get_object()
+#     #         item = self.get_object().item
+#     #         pages_number = PagesNumber.objects.filter(items__id=item.id)
+#     #         kwargs['item_name'] = item.name
+#     #         kwargs['pages_number'] = pages_number
+#     #         kwargs['item_category'] = item.category
+#     #     super().get_context_data(**kwargs)
+#
+#     def get(self, request, *args, **kwargs):
+#         self.object = self.get_object()
+#         item = self.get_object().item
+#         pages_number = PagesNumber.objects.filter(items__id=item.id)
+#         images = ProductImage.objects.filter(product_id=self.object.id)
+#         res = super().get(request, *args, **kwargs)
+#         res.context_data['item_name'] = item.name
+#         res.context_data['pages_number'] = pages_number
+#         res.context_data['item_category'] = item.category
+#         res.context_data['images'] = images
+#         return res
+#
+#     def get_form(self, form_class=None):
+#         if form_class is None:
+#             form_class = self.form_class
+#         kwargs = self.get_form_kwargs()
+#         kwargs['user'] = self.request.user
+#         form = form_class(**kwargs)
+#         return form
+#
+#     def post(self, request, *args, **kwargs):
+#         form = self.get_form()
+#         if form.is_valid():
+#             data = form.cleaned_data
+#             image_validator = create_validator(data, request)
+#             image_list = request.FILES.getlist('images')
+#             if not image_list:
+#                 messages.add_message(request, messages.ERROR, f'Загрузіть зображення')
+#                 data = self.get_context_data(**kwargs)
+#                 return render(request, self.template_name, data)
+#
+#             product = form.save(commit=False)
+#
+#             product.item = Item.objects.get(pk=self.item_id)
+#             product.status = ProductStatus.objects.get(pk=1)
+#
+#             # Глянути на код і зайнятись рефакторингом
+#             image_validator(image_list)
+#             messages_storage = get_messages(request)
+#
+#             if messages_storage:
+#                 data = self.get_context_data(**kwargs)
+#                 return render(request, self.template_name, data)
+#
+#             product.save()
+#
+#             for image in image_list:
+#                 renamed_image = rename_image(image, data['name'], front=True)
+#                 thumbnail = compresing_image(renamed_image)
+#                 # Глянути на метод save в ProductImage, виправити в ньому недоліки
+#                 # Переписати код в Detail View та temaple щоб коректно відображати нові зображення
+#                 # Edit View виправити та її форму
+#                 #
+#                 ProductImage.objects.create(image=renamed_image, thumbnail=thumbnail, product=product)
+#
+#
+#             # product.front_image = rename_image(data['front_image'], data['name'], front=True)
+#             # product.back_thumbnail = None
+#             # product.front_thumbnail = compresing_image(data['front_image'])
+#             # if data['back_image']:
+#             #     product.back_image = rename_image(data['back_image'], data['name'])
+#             #     product.back_thumbnail = compresing_image(data['back_image'])
+#
+#             if os.path.exists(os.path.join(MEDIA_ROOT, 'tmp_img')):
+#                 path = os.path.join(MEDIA_ROOT, 'tmp_img')
+#                 shutil.rmtree(path)
+#
+#             return redirect('checker:products_list')
+#
+#         return render(request, self.template_name, {'form': form})
 
-        return render(request, self.template_name, {'form': form})
+    # def post(self, request, *args, **kwargs):
+    #     # self.object = self.get_object()
+    #     form = self.get_form()
+    #     if form.is_valid():
+    #         """Якщо зображення замінюється то його попереднє треба видалити
+    #         дістати з екземпляра моделі зображення і його шлях та видалити
+    #         потім зрозуміти як працювати з зображеннями які були вже загружені,
+    #         тобто зробити перевірку якщо зображення не змінювалось то його не трогати
+    #         а якщо зображення не змінюється то ми його не трогаємо і не виконуємо компресію
+    #         """
+    #
+    #         data = form.cleaned_data
+    #         product = form.save(commit=False)
+    #
+    #         print(type(data['front_image']))
+    #         print(type(data['back_image']))
+    #
+    #         print(type(data['front_image']) == InMemoryUploadedFile)
+    #         print(type(data['back_image']) == InMemoryUploadedFile)
+    #
+    #         if type(data['front_image']) == InMemoryUploadedFile:
+    #             product.front_image = rename_image(data['front_image'], data['name'], front=True)
+    #             product.front_thumbnail = compresing_image(data['front_image'])
+    #         if type(data['back_image']) == InMemoryUploadedFile:
+    #             product.back_image = rename_image(data['back_image'], data['name'])
+    #             product.back_thumbnail = compresing_image(data['back_image'])
+    #
+    #         product.status = ProductStatus.objects.get(pk=1)
+    #         # front_image_path = product.front_image.path
+    #         product.save()
+    #         # if this_product.name != self.name:
+    #         #     folder_path = this_product.front_image.path.split('\\')
+    #         #     new_folder_path = '\\'.join(folder_path[:-1])
+    #         #     this_product.front_image.delete(save=False)
+    #         #     this_product.front_thumbnail.delete(save=False)
+    #         #     this_product.back_image.delete(save=False)
+    #         #     this_product.back_thumbnail.delete(save=False)
+    #         #     os.removedirs(new_folder_path)
+    #
+    #         return redirect('checker:products_list')
+    #
+    #     return render(request, self.template_name, {'form': form})

@@ -241,10 +241,6 @@ input:focus {
     align-items: center;
 }
 
-a:hover > img {
-    filter: brightness(0%);
-}
-
 .menu-img {
     width: 12px;
     margin-right: 5px;
@@ -488,6 +484,7 @@ a:hover > img {
     color: #b3b3b3;
 }
 
+
 .download-button {
     border-style: none;
     background: none;
@@ -495,8 +492,7 @@ a:hover > img {
     margin: 0;
     margin: 0px 5px;
     opacity: 0.5;
-    transition: opacity .5s;
-
+    /*transition: opacity .5s;*/
 }
 
 .download-button:hover {
@@ -604,6 +600,12 @@ a:hover > img {
 
 /* Add files */
 
+.load-image {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 .add-file__wrapper {
     display: flex;
     align-items: baseline;
@@ -617,11 +619,12 @@ a:hover > img {
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 380px;
-    min-height: 250px;
+    width: 180px;
+    min-height: 100px;
     border: 1px solid #c7c7c7;
     border-radius: 5px;
     margin: 0px;
+    cursor: pointer;
 }
 
 .image-container > img {
@@ -690,6 +693,10 @@ a:hover > img {
 .content__container {
     padding: 15px;
     width: 400px;
+}
+
+.thumbnail__container {
+    margin: 10px;
 }
 
 .content__container > h2{
@@ -872,4 +879,153 @@ div.close {
   right: 10px;
   color: #888;
   cursor: pointer;
+}
+
+/* Modal window */
+
+.modal {
+    gap: 0.4rem;
+    width: 650px;
+    min-height: 350px;
+    padding: 1.3rem;
+    position: absolute;
+    z-index: 2;
+    top: 20%;
+    left: 35%;
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-open {
+    position: absolute;
+    bottom: 150px;
+}
+
+.btn-close {
+    transform: translate(10px, -20px);
+    padding: 0.5rem 0.7rem;
+    background: #eee;
+    border-radius: 50%;
+    position: absolute;
+    top: 0%;
+    left: 96%;
+}
+
+.overlay {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    z-index: 1;
+  }
+
+  .hidden {
+    display: none;
+}
+
+/* Carusel */
+
+.galery-wrapper {
+    overflow: hidden;
+    width: 600px;
+    min-height: 350px;
+}
+
+#galery {
+    min-height: 350px;
+    width: 9999px;
+    margin: 0px;
+    padding: 0px;
+    list-style: none;
+    font-size: 0;
+    transition: margin-left 250ms;
+    display: flex;
+    align-items: center;
+}
+
+.galery-image-container {
+    display: inline-block;
+}
+
+.galery-image-container img{
+    display: block;
+}
+
+.arrow {
+    width: 50px;
+    height: 50px;
+    border: 1px solid #8cc63f;
+    background-color: transparent;
+    font-size: 25px;
+}
+
+
+.delete-modal {
+    width: 500px;
+    min-height: 75px;
+}
+
+.delete-modal-content-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.delete-product-button {
+    background-color: transparent;
+    opacity: 0.5;
+
+}
+
+
+.delete-product-button:hover {
+    opacity: 1;
+}
+
+/*.delete-modal-buttons-container {*/
+
+/*}*/
+
+.delete-modal-buttons-container > input {
+    border-style: none;
+    width: 150px;
+    height: 35px;
+    border-radius: 5px;
+    margin: 15px;
+    cursor: pointer;
+}
+
+.red {
+    background-color: red;
+    color: white;
+}
+
+.red:hover {
+    background-color: #bb0000;
+    color: white;
+}
+
+.grey {
+    background-color: #b0b0b0;
+    color: white;
+}
+
+.grey:hover {
+    background-color: #6c6c6c;
+    color: white;
 }

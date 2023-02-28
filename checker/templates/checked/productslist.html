@@ -59,6 +59,7 @@
             </div>
         </div>
         <div class="content">
+        <div class="overlay hidden"></div>
         {% for obj in page_obj %}
             <div class="content__item-container">
                 <div class="content__item-decor"></div>
@@ -107,13 +108,27 @@
                     </div>
                     <div class="content__item-line"></div>
                     <div class="content__item-element download-button">
-                            <button class="download-button">
-                                <img src="{% static 'checker/icons/icon-download-button.svg' %}" alt="" width="23">
-                            </button>
+                            <div class="download-button">
+                                <a href="{% url 'checker:download_files_view' obj.pk %}">
+                                    <img src="{% static 'checker/icons/icon-download-button.svg' %}" alt="" width="23">
+                                </a>
+                            </div>
                     </div>
                     <div class="content__item-element">
-                        <h6 class="content__item-title">Редагувати:</h6>
-                        <a href="{% url 'checker:edit_product' obj.pk %}" style="color: black;" class="content__item-text">Edit</a>
+                        <h6 class="content__item-title">Видалити:</h6>
+                        <div class="modal delete-modal hidden">
+                            <form action="{% url 'checker:delete_product' obj.pk %}" method="post">{% csrf_token %}
+                                <div class="delete-modal-content-container">
+                                    <p><span style="font-weight: bold">Видалити: </span>{{ obj.name }}<span style="font-weight: bold">?</span></p>
+                                    <div class="delete-modal-buttons-container">
+                                        <input type="Submit" value="Видалити" class="red">
+                                        <input type="Button" value="Відмінити" class="grey">
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <button class="delete-product-button"><i class="fa-solid fa-trash"></i></button>
+{#                        <a href="{% url 'checker:delete_product' obj.pk %}" style="color: black;" class="content__item-text">Delete</a>#}
                     </div>
                 </div>
                 <div class="content__item-status container {{ obj.status.div_status_class }}">
@@ -148,4 +163,6 @@
 {% endblock %}
 {% block script %}
     <script src="{% static 'checker/js/index.js' %}"></script>
+    <script src="{% static 'checker/js/productList.js' %}"></script>
+    <script src="https://kit.fontawesome.com/e35690309d.js" crossorigin="anonymous"></script>
 {% endblock %}

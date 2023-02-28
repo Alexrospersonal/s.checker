@@ -122,3 +122,51 @@ def create_validator(data, request):
     return complex_validator
 
 
+def transliteration(word):
+    transliteration_dict = {
+        'а': 'a',
+        'б': 'b',
+        'в': 'v',
+        'г': 'h',
+        'ґ': 'g',
+        'д': 'd',
+        'е': 'e',
+        'є': 'ie',
+        'ж': 'zh',
+        'з': 'z',
+        'и': 'y',
+        'і': 'i',
+        'ї': 'i',
+        'й': 'i',
+        'к': 'k',
+        'л': 'l',
+        'м': 'm',
+        'н': 'n',
+        'о': 'o',
+        'п': 'p',
+        'р': 'r',
+        'с': 's',
+        'т': 't',
+        'у': 'u',
+        'ф': 'f',
+        'х': 'kh',
+        'ц': 'ts',
+        'ч': 'ch',
+        'ш': 'sh',
+        'щ': 'shch',
+        'ь': '',
+        'ю': 'iu',
+        'я': 'ia',
+    }
+    trans_word = []
+    for let in word:
+        letter = let.lower()
+        if letter.isalpha() and letter in transliteration_dict:
+            trans_word.append(transliteration_dict[letter])
+        else:
+            trans_word.append(letter)
+
+    return ''.join(trans_word)
+
+
+
